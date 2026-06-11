@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GATE DA 2027 Prep Tracker</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --card:#1a1d24;
+    --accent:#6ee7b7;
+    --accent2:#60a5fa;
+    --text:#e5e7eb;
+    --muted:#9ca3af;
+    --done:#374151;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:24px;
+  }
+  .container{max-width:900px;margin:0 auto;}
+  header{
+    text-align:center;
+    margin-bottom:24px;
+  }
+  header h1{margin:0;font-size:1.8rem;}
+  header p{color:var(--muted);margin-top:4px;}
+
+  .progress-wrap{
+    background:var(--card);
+    border-radius:12px;
+    padding:16px 20px;
+    margin-bottom:24px;
+    position:sticky;
+    top:10px;
+    z-index:10;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  }
+  .progress-bar-bg{
+    background:#2d313b;
+    border-radius:8px;
+    height:14px;
+    overflow:hidden;
+    margin-top:8px;
+  }
+  .progress-bar-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    width:0%;
+    transition:width 0.3s ease;
+  }
+  .progress-text{display:flex;justify-content:space-between;align-items:center;font-size:0.95rem;}
+  .progress-text strong{font-size:1.1rem;}
+
+  .month{
+    background:var(--card);
+    border-radius:12px;
+    margin-bottom:16px;
+    overflow:hidden;
+    border:1px solid #2a2e38;
+  }
+  .month-header{
+    padding:14px 18px;
+    cursor:pointer;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    user-select:none;
+  }
+  .month-header h2{margin:0;font-size:1.1rem;}
+  .month-header .meta{font-size:0.85rem;color:var(--muted);}
+  .month-body{
+    padding:0 18px 14px 18px;
+    display:none;
+  }
+  .month.open .month-body{display:block;}
+  .month-header .arrow{transition:transform 0.2s ease;color:var(--accent);}
+  .month.open .arrow{transform:rotate(90deg);}
+
+  .week{
+    margin:14px 0;
+    padding-left:4px;
+    border-left:2px solid #2a2e38;
+    padding-left:14px;
+  }
+  .week h3{
+    margin:0 0 6px 0;
+    font-size:0.95rem;
+    color:var(--accent2);
+  }
+  .week .note{
+    font-size:0.85rem;
+    color:var(--muted);
+    margin:4px 0 8px 0;
+  }
+  ul.tasks{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  ul.tasks li{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:6px 0;
+    font-size:0.95rem;
+    line-height:1.4;
+  }
+  ul.tasks li input[type=checkbox]{
+    margin-top:3px;
+    width:18px;
+    height:18px;
+    accent-color:var(--accent);
+    flex-shrink:0;
+    cursor:pointer;
+  }
+  ul.tasks li.checked label{
+    color:var(--muted);
+    text-decoration:line-through;
+  }
+  label{cursor:pointer;}
+
+  .checkpoint{
+    margin-top:10px;
+    padding:10px 12px;
+    background:#11151c;
+    border-left:3px solid var(--accent);
+    border-radius:6px;
+    font-size:0.85rem;
+    color:#d1fae5;
+  }
+
+  .controls{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  button{
+    background:#2d313b;
+    color:var(--text);
+    border:1px solid #3a3f4b;
+    border-radius:8px;
+    padding:8px 14px;
+    cursor:pointer;
+    font-size:0.85rem;
+  }
+  button:hover{background:#3a3f4b;}
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:0.8rem;
+    margin-top:30px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>📘 GATE DA 2027 — Prep Tracker</h1>
+    <p>6-Month Study Plan • Click checkboxes to track progress (auto-saved)</p>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-text">
+      <span>Overall Progress</span>
+      <strong id="progressLabel">0%</strong>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="resetAll()">Reset Progress</button>
+  </div>
+
+  <div id="months"></div>
+
+  <footer>Made for GATE DA 2027 prep • Progress is saved in your browser</footer>
+</div>
+
+<script>
+const data = [
+  {
+    title: "Month 1: Linear Algebra + Programming/DSA Foundation",
+    meta: "Weeks 1-4",
+    weeks: [
+      {
+        title: "Week 1-2: Linear Algebra (Intuition + Foundations)",
+        note: "Daily: solve 10 GATE CS previous-year LA questions on the day's topic.",
+        tasks: [
+          "Watch all of 3Blue1Brown 'Essence of Linear Algebra' videos",
+          "Strang Lecture: Vector spaces & subspaces",
+          "Strang Lecture: Matrix operations (multiplication, inverse, transpose)",
+          "Strang Lecture: Rank, null space, column space",
+          "Strang Lecture: Determinants",
+          "Strang Lecture: Eigenvalues & eigenvectors (intro)",
+          "Strang Lecture: Eigenvalues & eigenvectors (applications)",
+          "Strang Lecture: Diagonalization",
+          "Strang Lecture: Orthogonality & projections",
+          "Strang Lecture: Symmetric matrices, positive definiteness",
+          "PYQ practice: Vector spaces & matrix ops (10 Qs)",
+          "PYQ practice: Determinants & rank (10 Qs)",
+          "PYQ practice: Eigenvalues/eigenvectors (10 Qs)",
+          "PYQ practice: Orthogonality & diagonalization (10 Qs)"
+        ]
+      },
+      {
+        title: "Week 3-4: Linear Algebra Depth + Start DSA",
+        note: "Parallel: 45 min/day on Python/DSA.",
+        tasks: [
+          "Strang Lecture: Singular Value Decomposition (SVD)",
+          "Strang Lecture: SVD applications",
+          "Strang Lecture: Vector calculus connections (gradients of quadratic forms)",
+          "Make a 1-page LA formula/cheat sheet",
+          "Weekend: Full LA mixed problem set (conceptual + numerical)",
+          "Python refresher (if needed): syntax, lists, dicts, functions",
+          "DSA: Arrays — basics & common patterns",
+          "DSA: Strings — basics & common patterns",
+          "DSA: Recursion fundamentals",
+          "DSA: Basic sorting algorithms (bubble, insertion, merge, quick)",
+          "DSA: Time complexity analysis practice (10 problems)",
+          "Checkpoint review: Self-test on eigendecomposition & SVD"
+        ]
+      }
+    ],
+    checkpoint: "End of Month 1: Comfortable with eigendecomposition, SVD, matrix rank, and basic Python/DSA syntax."
+  },
+  {
+    title: "Month 2: Probability & Statistics + DSA Continuation",
+    meta: "Weeks 5-8",
+    weeks: [
+      {
+        title: "Week 5-6: Probability",
+        note: "Daily: 10 GATE CS questions on probability topics covered.",
+        tasks: [
+          "Khan Academy: Basic probability rules",
+          "Khan Academy: Conditional probability",
+          "Khan Academy: Bayes' theorem",
+          "Khan Academy: Random variables (discrete & continuous)",
+          "Khan Academy: Expectation, variance of random variables",
+          "PYQ practice: Basic probability & conditional probability (10 Qs)",
+          "PYQ practice: Bayes' theorem (10 Qs)",
+          "PYQ practice: Random variables & expectation (10 Qs)",
+          "Make a 1-page Probability formula sheet"
+        ]
+      },
+      {
+        title: "Week 7-8: Statistics + DSA Continuation",
+        note: "Parallel DSA: trees, graphs, BFS/DFS. Weekend: combined Prob+Stats mock.",
+        tasks: [
+          "Khan Academy: Normal, binomial, Poisson distributions",
+          "Khan Academy: Mean, median, mode, variance, standard deviation",
+          "Khan Academy: Hypothesis testing basics",
+          "Khan Academy: Correlation & regression basics",
+          "PYQ practice: Distributions (10 Qs)",
+          "PYQ practice: Descriptive statistics (10 Qs)",
+          "PYQ practice: Hypothesis testing & regression (10 Qs)",
+          "DSA: Trees (binary trees, BST) basics & traversals",
+          "DSA: Graphs basics — representation",
+          "DSA: BFS & DFS implementation + practice",
+          "DSA: 10 graph/tree practice problems",
+          "Weekend: Combined Probability + Statistics mock test",
+          "Make a 1-page Statistics formula sheet"
+        ]
+      }
+    ],
+    checkpoint: "End of Month 2: Comfortable computing probabilities, working with distributions, and solving basic graph/tree problems."
+  },
+  {
+    title: "Month 3: Calculus & Optimization + DBMS",
+    meta: "Weeks 9-12",
+    weeks: [
+      {
+        title: "Week 9-10: Calculus",
+        note: "Connect to LA: practice gradients of vector/matrix functions.",
+        tasks: [
+          "Khan Academy: Partial derivatives",
+          "Khan Academy: Gradients & directional derivatives",
+          "Khan Academy: Hessians & second-order conditions",
+          "Khan Academy: Chain rule (multivariable)",
+          "Practice: Compute gradients of vector/matrix functions (10 problems)",
+          "PYQ practice: Calculus topics (10 Qs)",
+          "Make a 1-page Calculus formula sheet"
+        ]
+      },
+      {
+        title: "Week 11-12: Optimization + DBMS",
+        note: "Daily: 20-30 min SQL practice (LeetCode/HackerRank DB).",
+        tasks: [
+          "Optimization: Gradient descent — concept & math",
+          "Optimization: Convexity basics",
+          "Optimization: Constrained optimization & Lagrange multipliers",
+          "Practice: Gradient descent numerical problems (10 problems)",
+          "NPTEL DBMS: ER models",
+          "NPTEL DBMS: Relational model & keys",
+          "NPTEL DBMS: Normalization (1NF-BCNF)",
+          "NPTEL DBMS: SQL — SELECT, JOINs, GROUP BY",
+          "NPTEL DBMS: Transactions & concurrency basics",
+          "NPTEL DBMS: Indexing & data warehousing concepts",
+          "SQL practice problems (cumulative, ~20 problems)",
+          "PYQ practice: DBMS/SQL (10 Qs)",
+          "Make a 1-page DBMS/SQL cheat sheet"
+        ]
+      }
+    ],
+    checkpoint: "End of Month 3: Math foundation complete. Can compute gradients by hand, understand gradient descent, and write/interpret SQL queries."
+  },
+  {
+    title: "Month 4: Machine Learning",
+    meta: "Weeks 13-16",
+    weeks: [
+      {
+        title: "Week 13-14: ML Part 1",
+        note: "For each algorithm, derive the cost function and gradient by hand once.",
+        tasks: [
+          "Andrew Ng ML: Linear regression (concept + math)",
+          "Andrew Ng ML: Logistic regression (concept + math)",
+          "Andrew Ng ML: Regularization (L1/L2)",
+          "Derive cost function & gradient for linear regression (by hand)",
+          "Derive cost function & gradient for logistic regression (by hand)",
+          "StatQuest: Bias-variance tradeoff",
+          "StatQuest: Regularization intuition",
+          "PYQ practice: Linear/Logistic regression (10 Qs)"
+        ]
+      },
+      {
+        title: "Week 15-16: ML Part 2 + Finish DBMS",
+        note: "Continue DBMS in background — finish syllabus this month.",
+        tasks: [
+          "Decision trees: concept, entropy, information gain",
+          "Practice: Entropy/information gain numericals (10 problems)",
+          "Random forests & boosting (conceptual overview)",
+          "Support Vector Machines (SVM): concept & margin",
+          "PYQ practice: Decision trees, ensembles, SVM (10 Qs)",
+          "Finish remaining DBMS NPTEL modules",
+          "PYQ practice: Remaining DBMS topics (10 Qs)",
+          "Weekend: Full ML numerical problem set (gradient steps, entropy calcs, decision boundaries)"
+        ]
+      }
+    ],
+    checkpoint: "End of Month 4: Core ML algorithms understood conceptually + can solve numericals. DBMS syllabus complete."
+  },
+  {
+    title: "Month 5: Deep Learning + Artificial Intelligence",
+    meta: "Weeks 17-20",
+    weeks: [
+      {
+        title: "Week 17-18: Deep Learning",
+        note: "Practice: manually compute a forward pass and one backprop step for a small 2-layer network.",
+        tasks: [
+          "Neural networks: perceptron & activation functions",
+          "Forward propagation — concept & math",
+          "Backpropagation — concept & math",
+          "Practice: Manual forward pass for 2-layer NN (3 problems)",
+          "Practice: Manual backprop step for 2-layer NN (3 problems)",
+          "CNNs — architecture & use cases (conceptual)",
+          "RNNs — architecture & use cases (conceptual)",
+          "PYQ practice: Neural networks/DL (10 Qs)"
+        ]
+      },
+      {
+        title: "Week 19-20: Artificial Intelligence",
+        note: "Daily: solve search algorithm trace-through problems.",
+        tasks: [
+          "AIMA / NPTEL: Uninformed search (BFS, DFS, UCS)",
+          "AIMA / NPTEL: Informed search (A*, heuristics)",
+          "AIMA / NPTEL: Adversarial search — Minimax",
+          "AIMA / NPTEL: Alpha-beta pruning",
+          "AIMA / NPTEL: Constraint Satisfaction Problems (CSP)",
+          "Practice: Trace through BFS/DFS/A* search trees (5 problems)",
+          "Practice: Alpha-beta pruning trace-throughs (5 problems)",
+          "PYQ practice: AI/Search (10 Qs)"
+        ]
+      }
+    ],
+    checkpoint: "End of Month 5: Can trace through search algorithms by hand, compute alpha-beta pruning, and do a basic NN forward/backward pass."
+  },
+  {
+    title: "Month 6: General Aptitude + Revision + Mocks",
+    meta: "Weeks 21-24",
+    weeks: [
+      {
+        title: "Week 21: General Aptitude",
+        note: "Verbal: 1-2 hrs/day. Quant: overlaps with prior topics.",
+        tasks: [
+          "Verbal: Grammar rules (tenses, articles, prepositions, conjunctions)",
+          "Verbal: Vocabulary — idioms & phrases practice",
+          "Verbal: Reading comprehension practice (5 passages)",
+          "Verbal: Narrative sequencing practice",
+          "Quant: Ratios, percentages, powers, exponents, logarithms",
+          "Quant: Permutations & combinations",
+          "Quant: Series (number/letter series)",
+          "Quant: Mensuration & geometry",
+          "Quant: Data interpretation (graphs, charts, tables)",
+          "Analytical: Logic — deduction & induction practice",
+          "Analytical: Analogy & numerical reasoning practice",
+          "Spatial: Shape transformations (rotation, mirroring, scaling)",
+          "Spatial: Paper folding & cutting practice",
+          "GA: Full topic-wise practice set (20 Qs)"
+        ]
+      },
+      {
+        title: "Week 22: Mock 1 + Error Analysis",
+        note: "30-45 min/day GA practice continues.",
+        tasks: [
+          "Continue GA practice (daily, 30-45 min)",
+          "Take Full-Length Mock Test 1",
+          "Error analysis: categorize mistakes (conceptual / calculation / time)",
+          "Targeted review of top 3 weak topics from Mock 1"
+        ]
+      },
+      {
+        title: "Week 23: Targeted Revision + Mock 2",
+        note: "Daily 15-20 min formula sheet revision (LA, Probability, Calculus).",
+        tasks: [
+          "Revise weak areas identified from Mock 1 (deep dive)",
+          "Take Full-Length Mock Test 2",
+          "Error analysis for Mock 2",
+          "Daily formula sheet revision: Linear Algebra",
+          "Daily formula sheet revision: Probability & Statistics",
+          "Daily formula sheet revision: Calculus & Optimization"
+        ]
+      },
+      {
+        title: "Week 24: Final Mocks + Light Revision",
+        note: "No new topics this week. Rest 1-2 days before exam.",
+        tasks: [
+          "Take Full-Length Mock Test 3",
+          "Error analysis for Mock 3",
+          "Take Full-Length Mock Test 4",
+          "Error analysis for Mock 4",
+          "Review entire error log — identify recurring mistake patterns",
+          "Light revision of all formula sheets",
+          "Rest day(s) before exam — no new content"
+        ]
+      }
+    ],
+    checkpoint: "End of Month 6: Exam-ready. All weak areas addressed, formula sheets internalized, 4 full mocks completed with error analysis."
+  }
+];
+
+const monthsContainer = document.getElementById('months');
+
+function buildUI(){
+  data.forEach((month, mi) => {
+    const monthDiv = document.createElement('div');
+    monthDiv.className = 'month';
+    monthDiv.id = 'month-' + mi;
+
+    const header = document.createElement('div');
+    header.className = 'month-header';
+    header.onclick = () => monthDiv.classList.toggle('open');
+    header.innerHTML = `<h2>${month.title}</h2><div style="display:flex;align-items:center;gap:12px;"><span class="meta">${month.meta}</span><span class="arrow">▶</span></div>`;
+    monthDiv.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'month-body';
+
+    month.weeks.forEach((week, wi) => {
+      const weekDiv = document.createElement('div');
+      weekDiv.className = 'week';
+      weekDiv.innerHTML = `<h3>${week.title}</h3><div class="note">${week.note}</div>`;
+      const ul = document.createElement('ul');
+      ul.className = 'tasks';
+      week.tasks.forEach((task, ti) => {
+        const id = `m${mi}-w${wi}-t${ti}`;
+        const li = document.createElement('li');
+        li.id = 'li-' + id;
+        li.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${task}</label>`;
+        const cb = li.querySelector('input');
+        cb.addEventListener('change', () => {
+          li.classList.toggle('checked', cb.checked);
+          saveState();
+          updateProgress();
+        });
+        ul.appendChild(li);
+      });
+      weekDiv.appendChild(ul);
+      body.appendChild(weekDiv);
+    });
+
+    if(month.checkpoint){
+      const cp = document.createElement('div');
+      cp.className = 'checkpoint';
+      cp.innerHTML = `✅ <strong>Checkpoint:</strong> ${month.checkpoint}`;
+      body.appendChild(cp);
+    }
+
+    monthDiv.appendChild(body);
+    monthsContainer.appendChild(monthDiv);
+  });
+
+  // Open month 1 by default
+  document.getElementById('month-0').classList.add('open');
+}
+
+function getAllCheckboxes(){
+  return document.querySelectorAll('ul.tasks input[type=checkbox]');
+}
+
+function updateProgress(){
+  const all = getAllCheckboxes();
+  const checked = Array.from(all).filter(cb => cb.checked).length;
+  const pct = all.length ? Math.round((checked/all.length)*100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${pct}% (${checked}/${all.length})`;
+}
+
+function saveState(){
+  const state = {};
+  getAllCheckboxes().forEach(cb => state[cb.id] = cb.checked);
+  localStorage.setItem('gateDA2027Progress', JSON.stringify(state));
+}
+
+function loadState(){
+  const saved = localStorage.getItem('gateDA2027Progress');
+  if(!saved) return;
+  const state = JSON.parse(saved);
+  getAllCheckboxes().forEach(cb => {
+    if(state[cb.id]){
+      cb.checked = true;
+      document.getElementById('li-' + cb.id).classList.add('checked');
+    }
+  });
+}
+
+function expandAll(){
+  document.querySelectorAll('.month').forEach(m => m.classList.add('open'));
+}
+function collapseAll(){
+  document.querySelectorAll('.month').forEach(m => m.classList.remove('open'));
+}
+function resetAll(){
+  if(confirm('Reset all progress? This cannot be undone.')){
+    localStorage.removeItem('gateDA2027Progress');
+    getAllCheckboxes().forEach(cb => {
+      cb.checked = false;
+      document.getElementById('li-' + cb.id).classList.remove('checked');
+    });
+    updateProgress();
+  }
+}
+
+buildUI();
+loadState();
+updateProgress();
+</script>
+</body>
+</html>
